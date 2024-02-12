@@ -442,3 +442,34 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
+int sys_lseek(void){
+  struct file *f;
+  int offset;
+  int whence;
+  struct stat st;
+  if(argfd(0, 0, &f) < 0 || argint(1, &offset) < 0 || argint(2, &whence) < 0)
+    return -1;
+
+  if (filestat(f, &st) < 0) {
+    return -1;
+  }
+  int newoffset=0;
+  uint file_size=st.size;
+  if(whence==SEEK_SET){
+    newoffset=offset;
+  }
+  else if (whence==SEEK_CUR){
+    newoffset=offset+f->off;
+  }
+  else if (whence==SEEK_END){
+    newoffset=file_size+offset;
+  }
+  if(newoffset<0 || newoffset>file_size){
+    return -1;
+  }
+  f->off=newoffset;
+  return newoffset;
+}
