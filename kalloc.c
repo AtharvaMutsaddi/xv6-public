@@ -12,7 +12,6 @@ void freerange(void *vstart, void *vend);
 extern char end[]; // first address after kernel loaded from ELF file
                    // defined by the kernel linker script in kernel.ld
 
-
 #define MAX_FREE_PAGES 200000
 struct {
   struct spinlock lock;
@@ -31,7 +30,7 @@ kinit1(void *vstart, void *vend)
 {
   initlock(&kmem.lock, "kmem");
   kmem.use_lock = 0;
-  kmem.ci=MAX_FREE_PAGES-1;
+  kmem.ci=MAX_FREE_PAGES;
   freerange(vstart, vend);
 }
 
@@ -58,25 +57,19 @@ freerange(void *vstart, void *vend)
 void
 kfree(char *v)
 {
-  // struct run *r;
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
     panic("kfree");
 
-  // Fill with junk to catch dangling refs.
   memset(v, 1, PGSIZE);
 
   if(kmem.use_lock)
     acquire(&kmem.lock);
-  // r = (struct run*)v;
-  // r->next = kmem.freelist;
-  // kmem.freelist->prev=r;
-  // kmem.freelist = kmem.freelist->prev;
-  if(kmem.ci<0){
+  if(kmem.ci<=0){
     panic("kfree");
   }
   else{
-    kmem.freelist[kmem.ci]=v;
     kmem.ci--;
+    kmem.freelist[kmem.ci]=v;
   }
 
   if(kmem.use_lock)
@@ -89,20 +82,13 @@ kfree(char *v)
 char*
 kalloc(void)
 {
-  // struct run *r;
   char * pg=0;
   if(kmem.use_lock)
     acquire(&kmem.lock);
-  // r = kmem.freelist;
-  // if(r){
-  //   kmem.freelist = r->next;
-  //   kmem.freelist->prev=0;
-  // }
-  if(kmem.ci<MAX_FREE_PAGES-1){
-    pg=kmem.freelist[kmem.ci+1];
+  if(kmem.ci<MAX_FREE_PAGES){
+    pg=kmem.freelist[kmem.ci];
     kmem.ci++;
   }
-
   if(kmem.use_lock)
     release(&kmem.lock);
   return (char*)pg;
