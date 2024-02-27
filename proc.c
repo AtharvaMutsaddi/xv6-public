@@ -20,6 +20,40 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
+void 
+pstat(){
+  sti();
+  char * proc_states[6]={ "UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE" };
+  struct proc * p;
+  acquire(&ptable.lock);
+  cprintf("name\tpid\tpriority\tstate\tnum times sched\n");
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state!=UNUSED){
+      cprintf("%s\t%d\t%d\t%s\t%d\n",p->name,p->pid,p->priority,proc_states[p->state],p->chosen);
+    }
+  }
+  release(&ptable.lock);
+}
+
+int
+nice(int pid,int priority){
+  struct proc *p;
+	acquire(&ptable.lock);
+  int pri_set=0;
+	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+	  if(p->pid == pid){
+			p->priority = priority;
+      pri_set=1;
+			break;
+		}
+	}
+	release(&ptable.lock);
+	if(pri_set==1){
+    return pid;
+  }
+  return -1;
+}
+
 void
 pinit(void)
 {
@@ -88,7 +122,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  p->priority=1;
+  p->chosen=0;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -322,10 +357,9 @@ wait(void)
 void
 scheduler(void)
 {
-  struct proc *p;
+  struct proc *p,*p1,*chosen_proc;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -335,14 +369,23 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-
+      chosen_proc=p;
+      for(p1 = p; p1 < &ptable.proc[NPROC]; p1++){
+        if(p1->state != RUNNABLE){          
+	        continue;
+        }
+        if(p1->priority>chosen_proc->priority){
+          chosen_proc=p1;
+        }
+      }
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+      p=chosen_proc;
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
+      p->chosen++;
       swtch(&(c->scheduler), p->context);
       switchkvm();
 

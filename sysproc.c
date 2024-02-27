@@ -89,3 +89,22 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+int
+sys_pstat(void){
+  pstat();
+  return 0;
+}
+
+int
+sys_nice(void)
+{
+  int pid, priority;
+
+  if(argint(0, &pid) < 0)
+    return -1;
+
+  if(argint(1, &priority) < 0)
+    return -1;
+
+  return nice(pid, priority);
+}

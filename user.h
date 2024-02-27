@@ -37,3 +37,7 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+
+// proc.c
+void            pstat(void);
+int             nice(int pid,int priority);
