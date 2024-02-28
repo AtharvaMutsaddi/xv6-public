@@ -122,7 +122,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->priority=1;
+  p->priority=2;
   p->chosen=0;
   release(&ptable.lock);
 
@@ -370,7 +370,7 @@ scheduler(void)
       if(p->state != RUNNABLE)
         continue;
       chosen_proc=p;
-      for(p1 = p; p1 < &ptable.proc[NPROC]; p1++){
+      for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
         if(p1->state != RUNNABLE){          
 	        continue;
         }
@@ -393,6 +393,7 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
+    
     release(&ptable.lock);
 
   }

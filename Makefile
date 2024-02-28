@@ -183,6 +183,7 @@ UPROGS=\
 	_zombie\
 	_trypstat\
 	_trynice\
+	_createdummies\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
