@@ -8,13 +8,13 @@ main(int argc, char *argv[])
 {
   int priority, pid;
   if(argc < 3){
-    printf(2,"Usage: nice pid priority\n");
+    printf(2,"Usage: trynice pid priority\n");
     exit();
   }
   pid = atoi(argv[1]);
   priority = atoi(argv[2]);
-  if (priority < 0 || priority > 5){
-    printf(2,"Enter priority between (0-5)\n");
+  if (priority < 0 || priority > 10){
+    printf(2,"Enter priority between (0-10)\n");
     exit();
   }
   if(nice(pid,priority)<0){
