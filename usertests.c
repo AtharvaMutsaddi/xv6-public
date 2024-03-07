@@ -1982,28 +1982,6 @@ rand()
   return randstate;
 }
 
-// void prischedtest()
-// {
-//   printf(1, "Priority Scheduling test...\n");
-//   int pid1 = fork();
-//   if (pid1 < 0)
-//   {
-//     printf(1, "fork failed!\n");
-//     exit();
-//   }
-//   else if (pid1 == 0)
-//   {
-//     nice(pid1, 2);
-//     int x = 0;
-//     for (int z = 0; z < 4000000000; z += 1)
-//       x = x + 3.14 * 89.64; // Useless calculation to consume CPU Time
-//     exit();
-//   }
-//   else{
-//     int pid2=fork();
-//     // add syscall to get timequant
-//   }
-// }
 
 int main(int argc, char *argv[])
 {

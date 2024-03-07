@@ -122,6 +122,7 @@ void            wakeup(void*);
 void            yield(void);
 void            pstat(void);
 int             nice(int pid,int priority);
+int             getchosen(int pid);
 // swtch.S
 void            swtch(struct context**, struct context*);
 

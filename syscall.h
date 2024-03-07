@@ -22,3 +22,4 @@
 #define SYS_close  21
 #define SYS_nice   22
 #define SYS_pstat  23
+#define SYS_getchosen  24

@@ -21,6 +21,22 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
+int getchosen(int pid)
+{
+  struct proc *p;
+  acquire(&ptable.lock);
+  int chosen=1;
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if (p->pid == pid)
+    {
+      chosen=p->chosen;
+      break;
+    }
+  }
+  release(&ptable.lock);
+  return chosen;
+}
 void pstat()
 {
   sti();
@@ -37,7 +53,6 @@ void pstat()
   }
   release(&ptable.lock);
 }
-
 int nice(int pid, int priority)
 {
   struct proc *p;
@@ -59,7 +74,6 @@ int nice(int pid, int priority)
   }
   return -1;
 }
-
 void pinit(void)
 {
   initlock(&ptable.lock, "ptable");
@@ -372,7 +386,7 @@ int wait(void)
 //       via swtch back to the scheduler.
 void scheduler(void)
 {
-  struct proc *p; 
+  struct proc *p;
   // *p1, *chosen_proc;
   struct cpu *c = mycpu();
   c->proc = 0;

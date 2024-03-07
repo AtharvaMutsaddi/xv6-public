@@ -41,3 +41,4 @@ int atoi(const char*);
 // proc.c
 void            pstat(void);
 int             nice(int pid,int priority);
+int             getchosen(int pid);
