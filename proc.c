@@ -401,19 +401,6 @@ void scheduler(void)
     {
       if (p->state != RUNNABLE)
         continue;
-      // chosen_proc=p;
-      // // for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
-      //   if(p1->state != RUNNABLE){
-      //     continue;
-      //   }
-      //   if(p1->priority>chosen_proc->priority){
-      //     chosen_proc=p1;
-      //   }
-      // }
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      // p=chosen_proc;
       for (int i = 0; i < p->priority; i++)
       {
 

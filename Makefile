@@ -181,9 +181,6 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_trypstat\
-	_trynice\
-	_createdummies\
 	_prischedtest\
 
 fs.img: mkfs README $(UPROGS)
