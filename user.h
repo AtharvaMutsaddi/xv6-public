@@ -1,3 +1,7 @@
+typedef struct threadlock{
+    uint locked;
+}threadlock;
+
 struct stat;
 struct rtcdate;
 
@@ -23,7 +27,8 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-
+int clone(void (*fn)(void*),void * arg, void * threadstack);
+int join(void ** threadstack);
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);
@@ -37,3 +42,8 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+void threadlock_init(threadlock * tlock);
+void acquire_threadlock(threadlock * tlock);
+void release_threadlock(threadlock * tlock);
+int thread_create(void (*fn)(void*),void * arg);
+int thread_join();

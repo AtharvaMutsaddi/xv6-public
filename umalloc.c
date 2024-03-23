@@ -88,3 +88,11 @@ malloc(uint nbytes)
         return 0;
   }
 }
+int thread_create(void (*fn)(void*),void * arg){
+  void * threadstack=malloc(4096);
+  return clone(fn,arg,threadstack);
+}
+int thread_join(){
+  void * threadstack;
+  return join(&threadstack);
+}

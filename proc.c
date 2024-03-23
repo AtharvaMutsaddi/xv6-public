@@ -111,7 +111,7 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
-
+  p->isthread=0;
   return p;
 }
 
@@ -170,6 +170,14 @@ growproc(int n)
       return -1;
   }
   curproc->sz = sz;
+  acquire(&ptable.lock);
+  for(struct proc *p=ptable.proc;p<&ptable.proc[NPROC];p++)
+  {
+    if((p->parent==curproc) && (p->pgdir==curproc->pgdir)){
+      p->sz=curproc->sz;
+    }
+  }
+  release(&ptable.lock);
   switchuvm(curproc);
   return 0;
 }
@@ -199,7 +207,7 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
-
+  np->isthread=0;
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
@@ -220,7 +228,80 @@ fork(void)
 
   return pid;
 }
+int clone(void (*fn)(void*),void * arg, void * threadstack){
+  if(((uint)threadstack%PGSIZE) != 0){
+    return -1;
+  } 
+  int i; 
+  struct proc * np;
+  struct proc *curproc = myproc();
+  if((np = allocproc()) == 0){
+    return -1;
+  }
+  np->pgdir=curproc->pgdir;
+  np->sz=curproc->sz; // check
+  np->parent=curproc;
+  *np->tf=*curproc->tf;
+  np->isthread=1;
+  void * ret_addr=threadstack+PGSIZE-2*sizeof(void*);
+  *(uint*)ret_addr=0xFFFFFFF;
+  void * fn_arg=threadstack+PGSIZE-sizeof(void*);
+  *(uint*)fn_arg=(uint)arg;
+  np->tf->esp=(uint)threadstack+PGSIZE-2*sizeof(void*);
+  np->tf->ebp=np->tf->esp;
+  np->tf->eip=(uint)fn;
+  np->tf->eax=0;
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+  int pid = np->pid;
+  acquire(&ptable.lock);
+  np->state = RUNNABLE;
+  release(&ptable.lock);
+  return pid;
+}
+int
+join(void** threadstack)
+{
+  struct proc *p;
+  int found, pid;
+  struct proc * proc=myproc();
+  acquire(&ptable.lock);
+  for(;;){
+    found = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 
+      if((p->parent != proc) || (p->pgdir != proc->pgdir) || (!p->isthread))
+        continue;
+
+      found = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        p->state = UNUSED;
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        *(threadstack) = (void*)p->threadstack;  // To be freed
+        p->threadstack=0;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    if(!found || proc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc, &ptable.lock);  //DOC: wait-sleep
+  }
+}
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
@@ -254,6 +335,9 @@ exit(void)
 
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if((p->parent==curproc) && (p->pgdir=curproc->pgdir)){
+      curproc->pgdir=copyuvm(p->pgdir,p->sz);
+    }
     if(p->parent == curproc){
       p->parent = initproc;
       if(p->state == ZOMBIE)
@@ -282,6 +366,8 @@ wait(void)
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->parent != curproc)
+        continue;
+      if(p->isthread)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){

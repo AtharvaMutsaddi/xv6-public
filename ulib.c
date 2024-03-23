@@ -104,3 +104,14 @@ memmove(void *vdst, const void *vsrc, int n)
     *dst++ = *src++;
   return vdst;
 }
+void threadlock_init(threadlock * tlock){
+  tlock->locked=0;
+}
+void acquire_threadlock(threadlock * tlock){
+  while(xchg(&tlock->locked, 1) != 0){
+    ;
+  }
+}
+void release_threadlock(threadlock * tlock){
+  xchg(&tlock->locked,0);
+}
