@@ -5,16 +5,21 @@
 int c = 0;
 int c1 = 0;
 int c2 = 0;
+int run=1;
 threadlock *tlock;
 void f1(void *synch_val)
 {
-    int synch= *((int*)synch_val);
+
+    int synch = *((int *)synch_val);
     if (synch)
     {
         acquire_threadlock(tlock);
     }
-    c++;
-    c1++;
+    while (run==1)
+    {
+        c++;
+        c1++;
+    }
     if (synch)
     {
         release_threadlock(tlock);
@@ -22,32 +27,39 @@ void f1(void *synch_val)
 }
 void f2(void *synch_val)
 {
-    int synch= *((int*)synch_val);
+    int synch = *((int *)synch_val);
     if (synch)
     {
         acquire_threadlock(tlock);
     }
-    c++;
-    c2++;
+    while (run==1)
+    {
+        c++;
+        c2++;
+    }
     if (synch)
     {
         release_threadlock(tlock);
     }
 }
-void f3(void * a){
-    printf(1,"Hello\n");
+void f3(void *a)
+{
+    printf(1, "Hello\n");
 }
-void f4(void * a){
-    printf(1,"Hi\n");
+void f4(void *a)
+{
+    printf(1, "Hi\n");
 }
 int main(int argc, char *argv[])
 {
     threadlock_init(tlock);
-    int synch=0;
-    thread_create(&f1,(void*)&synch);
-    thread_create(&f2,(void*)&synch);
+    int synch = 0;
+    thread_create(&f1, (void *)&synch);
     thread_join();
+    thread_create(&f2, (void *)&synch);
     thread_join();
-    printf(1,"c:%d,c1:%d,c2:%d\n",c,c1,c2);
+    sleep(2);
+    run=0;
+    printf(1, "c:%d,c1:%d,c2:%d\n", c, c1, c2);
     exit();
 }
