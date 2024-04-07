@@ -32,7 +32,7 @@ struct procStates initPS(){
   ps.scheduled=0;
   return ps;
 }
-struct procStates fillpsstates(void){
+int pps(void){
   struct proc *p;
   struct procStates ps=initPS();
   acquire(&ptable.lock);
@@ -42,7 +42,10 @@ struct procStates fillpsstates(void){
   ps.forked=totforked;
   ps.scheduled=totsched;
   ps.tottraps=gettottraps();
+  ps.keyint=gettotkey();
+  cprintf("Forked:%d\nRUNNABLE:%d\nSLEEPING:%d\nZOMBIE:%d\nScheduling:%d\nKeyboard INT:%d\nTraps:%d\n",ps.forked,ps.stateArr[RUNNABLE],ps.stateArr[SLEEPING],ps.stateArr[ZOMBIE],ps.scheduled,ps.keyint,ps.tottraps);
   release(&ptable.lock); 
+  return 0;
 }
 void
 pinit(void)
