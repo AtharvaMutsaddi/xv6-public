@@ -93,10 +93,10 @@ sys_uptime(void)
 int
 sys_clone(void)
 {
-  int fcn, arg1, arg2, stack;
-  if(argint(0, &fcn)<0 || argint(1, &arg1)<0 || argint(2, &arg2)<0 || argint(3, &stack)<0)
+  int fcn, arg, threadstack;
+  if(argint(0, &fcn)<0 || argint(1, &arg)<0 || argint(3, &threadstack)<0)
     return -1;
-  return clone((void *)fcn, (void *)arg1, (void *)arg2, (void *)stack);
+  return clone((void *)fcn, (void *)arg, (void *)threadstack);
 }
 
 int

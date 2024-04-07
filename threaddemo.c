@@ -2,59 +2,51 @@
 #include "stat.h"
 #include "user.h"
 #include "fcntl.h"
-#define SLEEP_TIME 100
-
-lock_t* lk;
-int c=0;
-void f1(void* arg1, void* arg2) {
-  int num = *(int*)arg1;
-  if (num) lock_acquire(lk);
-  c+=1;
-  sleep(SLEEP_TIME);
-  if (num) lock_release(lk);
-  exit();
-}
-
-void f2(void* arg1, void* arg2) {
-  int num = *(int*)arg1;
-  if (num) lock_acquire(lk);
-  c+=2;
-  sleep(SLEEP_TIME);
-  if (num) lock_release(lk);
-  exit();
-}
-
-void f3(void* arg1, void* arg2) {
-  int num = *(int*)arg1;
-  if (num) lock_acquire(lk);
-  c=((c/3)  + (c%3));
-  sleep(SLEEP_TIME);
-  if (num) lock_release(lk);
-  exit();
-}
-
-int
-main(int argc, char *argv[])
+int c = 0, c1 = 0, c2 = 0, run = 1;
+threadlock * tlock;
+void thread1(void *arg)
 {
-  lock_init(lk);
-  int arg1 = 1, arg2 = 1;
+  int num = *(int *)arg;
+  while (run == 1)
+  {
 
-  printf(1, "below should be sequential print statements:\n");
-  thread_create(&f1, (void *)&arg1, (void *)&arg2);
-  thread_create(&f2, (void *)&arg1, (void *)&arg2);
-  thread_create(&f3, (void *)&arg1, (void *)&arg2);
+    if (num!=0)
+      acquire_threadlock(tlock);
+    c++;
+    c1++;
+    printf(1,"c:%d,c1:%d\n",c,c1);
+    if (num!=0)
+      release_threadlock(tlock);
+  }
+  exit();
+}
+void thread2(void *arg)
+{
+  int num = *(int *)arg;
+  while (run == 1)
+  {
+
+    if (num!=0)
+      acquire_threadlock(tlock);
+    c++;
+    c2++;
+    printf(1,"c:%d,c2:%d\n",c,c2);
+    if (num!=0)
+      release_threadlock(tlock);
+  }
+  exit();
+}
+int main(int argc, char *argv[])
+{
+  
+  init_threadlock(tlock);
+  int arg = atoi(argv[1]);
+  thread_create(&thread1, (void *)&arg);
+  thread_create(&thread2, (void *)&arg);
+  sleep(200);
+  run=0;
   thread_join();
   thread_join();
-  thread_join();
-  printf(1,"%d\n",c);
-  arg1 = 0;
-  printf(1, "below should be a jarbled mess:\n");
-  thread_create(&f1, (void *)&arg1, (void *)&arg2);
-  thread_create(&f2, (void *)&arg1, (void *)&arg2);
-  thread_create(&f3, (void *)&arg1, (void *)&arg2);
-  thread_join();
-  thread_join();
-  thread_join();
-  printf(1,"%d\n",c);
+  printf(1,"c:%d,c1:%d,c2:%d\n",c,c1,c2);
   exit();
 }

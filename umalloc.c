@@ -88,12 +88,11 @@ malloc(uint nbytes)
         return 0;
   }
 }
-int thread_create(void (*start_routine)(void *, void *), void* arg1, void* arg2)
+int thread_create(void (*fn)(void *), void* arg)
 {
-  void* stack;
-  stack = malloc(4096);
-
-  return clone(start_routine, arg1, arg2, stack);
+  void* threadstack;
+  threadstack = malloc(4096);
+  return clone(fn, arg, threadstack);
 }
 
 int thread_join()

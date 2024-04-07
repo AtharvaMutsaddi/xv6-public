@@ -104,16 +104,16 @@ memmove(void *vdst, const void *vsrc, int n)
     *dst++ = *src++;
   return vdst;
 }
-int lock_init(lock_t *lk)
+int init_threadlock(threadlock *lk)
 {
   lk->flag = 0;
   return 0;
 }
 
-void lock_acquire(lock_t *lk){
+void acquire_threadlock(threadlock *lk){
   while(xchg(&lk->flag, 1) != 0);
 }
 
-void lock_release(lock_t *lk){
+void release_threadlock(threadlock *lk){
 	xchg(&lk->flag, 0);
 }
