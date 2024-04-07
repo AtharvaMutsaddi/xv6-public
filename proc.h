@@ -56,3 +56,10 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+struct procStates{
+  uint stateArr[6];
+  uint forked;
+  uint scheduled;
+  uint keyint;
+  uint tottraps;
+};

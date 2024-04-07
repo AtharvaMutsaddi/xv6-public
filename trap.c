@@ -13,7 +13,14 @@ struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
-
+uint tottraps=0;
+uint totkey=0;
+uint gettottraps(){
+  return tottraps;
+}
+uint gettotkey(){
+  return totkey;
+}
 void
 tvinit(void)
 {
@@ -36,6 +43,7 @@ idtinit(void)
 void
 trap(struct trapframe *tf)
 {
+  tottraps++;
   if(tf->trapno == T_SYSCALL){
     if(myproc()->killed)
       exit();
@@ -64,6 +72,7 @@ trap(struct trapframe *tf)
     // Bochs generates spurious IDE1 interrupts.
     break;
   case T_IRQ0 + IRQ_KBD:
+    totkey++;
     kbdintr();
     lapiceoi();
     break;

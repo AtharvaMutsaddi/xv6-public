@@ -15,11 +15,35 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
+uint totsched=0;
+uint totforked=0;
 extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
-
+struct procStates initPS(){
+  struct procStates ps;
+  for(int i=0;i<6;i++){
+    ps.stateArr[i]=0;
+  }
+  ps.forked=0;
+  ps.keyint=0;
+  ps.tottraps=0;
+  ps.scheduled=0;
+  return ps;
+}
+struct procStates fillpsstates(void){
+  struct proc *p;
+  struct procStates ps=initPS();
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    ps.stateArr[p->state]++;
+  }
+  ps.forked=totforked;
+  ps.scheduled=totsched;
+  ps.tottraps=gettottraps();
+  release(&ptable.lock); 
+}
 void
 pinit(void)
 {
@@ -183,7 +207,7 @@ fork(void)
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
-
+  totforked++;
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
@@ -339,6 +363,7 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+      totsched++;
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
@@ -408,7 +433,6 @@ forkret(void)
     iinit(ROOTDEV);
     initlog(ROOTDEV);
   }
-
   // Return to "caller", actually trapret (see allocproc).
 }
 
