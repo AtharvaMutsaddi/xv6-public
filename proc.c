@@ -88,7 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  p->isthread=0;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -232,6 +232,7 @@ clone(void(*fn)(void*), void *arg, void* threadstack)
   np->pgdir = p->pgdir;
   np->sz = p->sz;
   np->parent = p;
+  np->isthread=1;
   *np->tf = *p->tf;
   void * threadarg, *threadret;
   threadret = threadstack + PGSIZE - 2 * sizeof(void *);
@@ -277,6 +278,7 @@ join(void** stack)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
+        p->isthread=0;
         p->state = UNUSED;
         stack = p->threadstack;
         p->threadstack = 0;
@@ -553,7 +555,26 @@ kill(int pid)
 
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->pid == pid){
+    if(p->pid == pid && p->isthread==0){
+      p->killed = 1;
+      // Wake process from sleep if necessary.
+      if(p->state == SLEEPING)
+        p->state = RUNNABLE;
+      release(&ptable.lock);
+      return 0;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
+}
+int
+kill_thread(int pid)
+{
+  struct proc *p;
+
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid && p->isthread==1){
       p->killed = 1;
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)

@@ -14,6 +14,7 @@ void thread1(void *arg)
       acquire_threadlock(tlock);
     c++;
     c1++;
+    printf(1,"Thread id:%d.Process Id:%d\n",gettid(),getpid());
     printf(1,"c:%d,c1:%d\n",c,c1);
     if (num!=0)
       release_threadlock(tlock);
@@ -30,6 +31,7 @@ void thread2(void *arg)
       acquire_threadlock(tlock);
     c++;
     c2++;
+    printf(1,"Thread id:%d.Process Id:%d\n",gettid(),getpid());
     printf(1,"c:%d,c2:%d\n",c,c2);
     if (num!=0)
       release_threadlock(tlock);

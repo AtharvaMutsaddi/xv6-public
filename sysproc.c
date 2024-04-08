@@ -35,13 +35,31 @@ sys_kill(void)
     return -1;
   return kill(pid);
 }
+int
+sys_tkill(void)
+{
+  int pid;
+
+  if(argint(0, &pid) < 0)
+    return -1;
+  return kill_thread(pid);
+}
 
 int
 sys_getpid(void)
 {
+  if(myproc()->isthread==1){
+    return myproc()->parent->pid;
+  }
   return myproc()->pid;
 }
-
+int 
+sys_gettid(void){
+  if(myproc()->isthread==0){
+    return -1;
+  }
+  return myproc()->pid;
+}
 int
 sys_sbrk(void)
 {

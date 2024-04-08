@@ -23,11 +23,13 @@ int mkdir(const char*);
 int chdir(const char*);
 int dup(int);
 int getpid(void);
+int gettid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int clone(void (*fn)(void*), void *, void *);
 int join(void**);
+int tkill(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
