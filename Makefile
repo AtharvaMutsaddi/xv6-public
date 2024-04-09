@@ -182,6 +182,8 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_threaddemo\
+	_threadcreate\
+	_tkill\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
