@@ -181,7 +181,7 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_trypps\
+	_newsyscall\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
